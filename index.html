@@ -1,0 +1,2442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cybernetic Pong - Ultimate Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #0a0a0a, #1a0a2e);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 20px rgba(0, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.8);
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            background: transparent;
+        }
+
+        /* UI Overlays */
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            display: none;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .ui-overlay.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Menu Styles */
+        .menu {
+            text-align: center;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            max-height: 90vh;
+            max-width: 90vw;
+            overflow: hidden;
+            padding: 15px 15px 25px 15px;
+            box-sizing: border-box;
+        }
+
+        .menu h1 {
+            font-size: 3em;
+            margin-bottom: 0.5em;
+            text-shadow: 0 0 20px #00ffff;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .menu-button {
+            display: block;
+            margin: 8px auto;
+            padding: 10px 20px;
+            background: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            min-width: 170px;
+            max-width: 220px;
+        }
+
+        .menu-button:hover {
+            background: #00ffff;
+            color: #000;
+            box-shadow: 0 0 20px #00ffff;
+            transform: scale(1.05);
+        }
+
+        .menu-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Game UI */
+        #gameUI {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ffff;
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ffff;
+            z-index: 10;
+            text-align: center;
+        }
+
+        #gameInfo {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ffff;
+            font-size: 14px;
+            text-align: center;
+            opacity: 0.8;
+            z-index: 10;
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ffff;
+            font-size: 14px;
+            text-align: center;
+            opacity: 0.7;
+            z-index: 10;
+        }
+
+        /* Animations */
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ffff; }
+            to { text-shadow: 0 0 30px #00ffff, 0 0 40px #00ffff; }
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            body {
+                overflow: hidden;
+                padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            }
+
+            #gameContainer {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+                border-radius: 0;
+                max-width: none;
+                max-height: none;
+                position: relative;
+            }
+
+            canvas {
+                width: 100vw !important;
+                height: calc(100vh - 140px) !important;
+                max-width: none;
+                max-height: none;
+                display: block;
+                margin: 0 auto;
+            }
+
+            #gameUI {
+                top: max(15px, env(safe-area-inset-top, 15px));
+                font-size: 22px;
+                z-index: 20;
+                background: rgba(0, 0, 0, 0.7);
+                padding: 8px 16px;
+                border-radius: 8px;
+                backdrop-filter: blur(5px);
+            }
+
+            #gameInfo {
+                top: max(55px, calc(env(safe-area-inset-top, 15px) + 40px));
+                font-size: 14px;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                background: rgba(0, 0, 0, 0.6);
+                padding: 6px 12px;
+                border-radius: 6px;
+                backdrop-filter: blur(3px);
+                max-width: 90vw;
+                z-index: 15;
+            }
+
+            #instructions {
+                bottom: max(150px, calc(env(safe-area-inset-bottom, 10px) + 140px));
+                font-size: 13px;
+                padding: 8px 15px;
+                background: rgba(0, 0, 0, 0.7);
+                border-radius: 6px;
+                backdrop-filter: blur(5px);
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 90vw;
+                text-align: center;
+                white-space: normal;
+                line-height: 1.3;
+                z-index: 15;
+            }
+
+            .menu {
+                padding: 20px;
+                max-height: 85vh;
+                overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+
+            .menu::-webkit-scrollbar {
+                display: none;
+            }
+
+            .menu h1 {
+                font-size: 2em;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+
+            .menu p {
+                font-size: 16px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+
+            .menu-button {
+                font-size: 16px;
+                padding: 12px 24px;
+                margin: 10px auto;
+                min-width: 180px;
+                max-width: 250px;
+                display: block;
+                touch-action: manipulation;
+            }
+        }
+
+        @media (max-width: 480px) {
+            canvas {
+                height: calc(100vh - 120px) !important;
+            }
+
+            #gameUI {
+                font-size: 20px;
+                padding: 6px 12px;
+            }
+
+            #gameInfo {
+                font-size: 12px;
+                padding: 4px 8px;
+                top: max(50px, calc(env(safe-area-inset-top, 15px) + 35px));
+            }
+
+            #instructions {
+                bottom: max(130px, calc(env(safe-area-inset-bottom, 10px) + 120px));
+                font-size: 11px;
+                padding: 6px 12px;
+                line-height: 1.4;
+            }
+
+            .menu {
+                padding: 15px;
+                max-height: 80vh;
+            }
+
+            .menu h1 {
+                font-size: 1.7em;
+                margin-bottom: 12px;
+            }
+
+            .menu p {
+                font-size: 14px;
+                margin-bottom: 15px;
+            }
+
+            .menu-button {
+                font-size: 14px;
+                padding: 10px 20px;
+                margin: 8px auto;
+                min-width: 160px;
+                max-width: 200px;
+            }
+        }
+
+        /* Touch Controls */
+        .touch-controls {
+            position: fixed;
+            bottom: max(15px, env(safe-area-inset-bottom, 15px));
+            left: 0;
+            right: 0;
+            width: 100%;
+            display: none;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+            height: 90px;
+            align-items: center;
+        }
+
+        .touch-button {
+            width: 75px;
+            height: 75px;
+            border: 3px solid #00ffff;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.2);
+            color: #00ffff;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: manipulation;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            transition: all 0.1s ease;
+            cursor: pointer;
+        }
+
+        .touch-button:active {
+            background: rgba(0, 255, 255, 0.5);
+            transform: scale(0.9);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.3);
+            border-color: #ffffff;
+        }
+
+        .touch-button:hover {
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.6), inset 0 0 12px rgba(0, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px), (orientation: landscape) and (max-height: 500px) {
+            .touch-controls {
+                display: flex !important;
+            }
+        }
+
+        /* Force touch controls on all mobile devices */
+        @media (pointer: coarse) {
+            .touch-controls {
+                display: flex !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .touch-controls {
+                padding: 0 25px;
+                bottom: max(10px, env(safe-area-inset-bottom, 10px));
+                height: 80px;
+            }
+
+            .touch-button {
+                width: 65px;
+                height: 65px;
+                font-size: 20px;
+                border-width: 2px;
+            }
+        }
+
+        /* Landscape orientation improvements */
+        @media (max-width: 768px) and (orientation: landscape) {
+            #gameContainer {
+                height: 100vh;
+                width: 100vw;
+            }
+
+            canvas {
+                height: calc(100vh - 70px) !important;
+                width: calc(100vw - 140px) !important;
+                margin: 0 auto;
+                display: block;
+            }
+
+            #gameUI {
+                top: max(5px, env(safe-area-inset-top, 5px));
+                font-size: 14px;
+                padding: 3px 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 20;
+            }
+
+            #gameInfo {
+                top: max(25px, calc(env(safe-area-inset-top, 5px) + 20px));
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+
+            #instructions {
+                bottom: max(60px, calc(env(safe-area-inset-bottom, 5px) + 55px));
+                font-size: 9px;
+                padding: 3px 8px;
+                max-width: 70vw;
+            }
+
+            .touch-controls {
+                display: flex !important;
+                position: fixed;
+                bottom: max(10px, env(safe-area-inset-bottom, 10px));
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 60px;
+                padding: 0 20px;
+                justify-content: space-between;
+                align-items: center;
+                z-index: 200;
+                pointer-events: none;
+            }
+
+            .touch-button {
+                width: 55px;
+                height: 55px;
+                font-size: 18px;
+                border-width: 2px;
+                pointer-events: auto;
+                background: rgba(0, 255, 255, 0.25);
+                box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            }
+
+            .touch-button:active {
+                background: rgba(0, 255, 255, 0.6);
+                transform: scale(0.9);
+                box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+            }
+
+            .menu {
+                max-height: 75vh;
+                padding: 5px;
+                overflow-y: auto;
+            }
+
+            .menu h1 {
+                font-size: 1.3em;
+                margin-bottom: 5px;
+            }
+
+            .menu h2 {
+                font-size: 1.1em;
+                margin-bottom: 5px;
+            }
+
+            .menu p {
+                font-size: 10px;
+                margin-bottom: 5px;
+            }
+
+            #statsContent {
+                max-height: 45vh !important;
+                overflow-y: auto;
+                margin: 5px 0 !important;
+            }
+
+            #statsContent div {
+                font-size: 10px !important;
+                line-height: 1.2 !important;
+                margin: 5px 0 !important;
+                text-align: left !important;
+            }
+
+            #statsContent p {
+                margin: 2px 0 !important;
+                font-size: 10px !important;
+                line-height: 1.2 !important;
+            }
+
+            .menu-button {
+                font-size: 10px;
+                padding: 6px 12px;
+                margin: 3px auto;
+                min-width: 120px;
+                max-width: 150px;
+            }
+        }
+
+        /* Extra small landscape screens - force statistics menu to fit */
+        @media (max-width: 768px) and (orientation: landscape) and (max-height: 450px) {
+            .menu {
+                max-height: 65vh !important;
+                padding: 3px !important;
+            }
+
+            .menu h2 {
+                font-size: 1em !important;
+                margin-bottom: 3px !important;
+            }
+
+            #statsContent {
+                max-height: 35vh !important;
+                overflow-y: auto !important;
+                margin: 3px 0 !important;
+            }
+
+            #statsContent div {
+                font-size: 9px !important;
+                line-height: 1.1 !important;
+                margin: 3px 0 !important;
+            }
+
+            #statsContent p {
+                margin: 1px 0 !important;
+                font-size: 9px !important;
+            }
+
+            .menu-button {
+                font-size: 9px !important;
+                padding: 4px 8px !important;
+                margin: 2px auto !important;
+                min-width: 100px !important;
+                max-width: 120px !important;
+            }
+        }
+
+        /* Ensure touch controls are always visible on mobile landscape */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .touch-controls {
+                display: flex !important;
+                bottom: 5px;
+                height: 50px;
+            }
+
+            .touch-button {
+                width: 45px;
+                height: 45px;
+                font-size: 16px;
+            }
+
+            canvas {
+                height: calc(100vh - 60px) !important;
+            }
+
+            #instructions {
+                bottom: 50px;
+                font-size: 8px;
+            }
+        }
+
+        /* Portrait orientation message for mobile */
+        .orientation-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            z-index: 1000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .orientation-message h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .orientation-message p {
+            font-size: 1em;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .rotate-icon {
+            font-size: 3em;
+            animation: rotate 2s linear infinite;
+            margin: 20px 0;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            .orientation-message.show-in-game {
+                display: flex;
+            }
+        }
+
+        /* Show/hide instructions based on device type */
+        @media (max-width: 768px), (pointer: coarse) {
+            .desktop-instructions {
+                display: none;
+            }
+            .mobile-instructions-text {
+                display: inline !important;
+            }
+        }
+
+        @media (min-width: 769px) and (pointer: fine) {
+            .mobile-instructions-text {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+        <!-- Main Menu -->
+        <div id="mainMenu" class="ui-overlay active">
+            <div class="menu">
+                <h1>CYBERNETIC PONG</h1>
+                <p>Ultimate Edition</p>
+                <button class="menu-button" onclick="Game.startSinglePlayer()">Single Player</button>
+                <button class="menu-button" onclick="Game.showSettings()">Settings</button>
+                <button class="menu-button" onclick="Game.showStats()">Statistics</button>
+                <button class="menu-button" onclick="Game.toggleFullscreen()">Fullscreen</button>
+            </div>
+        </div>
+
+        <!-- Settings Menu -->
+        <div id="settingsMenu" class="ui-overlay">
+            <div class="menu">
+                <h2>SETTINGS</h2>
+                <div id="settingsContent"></div>
+                <button class="menu-button" onclick="Game.showMainMenu()">Back</button>
+            </div>
+        </div>
+
+        <!-- Pause Menu -->
+        <div id="pauseMenu" class="ui-overlay">
+            <div class="menu">
+                <h2>PAUSED</h2>
+                <button class="menu-button" onclick="Game.resumeGame()">Resume</button>
+                <button class="menu-button" onclick="Game.showSettings()">Settings</button>
+                <button class="menu-button" onclick="Game.showMainMenu()">Main Menu</button>
+            </div>
+        </div>
+
+        <!-- Game Over Menu -->
+        <div id="gameOverMenu" class="ui-overlay">
+            <div class="menu">
+                <h2 id="gameOverTitle">GAME OVER</h2>
+                <p id="gameOverStats"></p>
+                <button class="menu-button" onclick="Game.restartGame()">Play Again</button>
+                <button class="menu-button" onclick="Game.showMainMenu()">Main Menu</button>
+            </div>
+        </div>
+
+        <!-- Statistics Menu -->
+        <div id="statsMenu" class="ui-overlay">
+            <div class="menu">
+                <h2>STATISTICS</h2>
+                <div id="statsContent">
+                    <div style="text-align: left; margin: 20px 0; font-size: 16px; line-height: 1.8;">
+                        <p>🎮 <strong>Games Played:</strong> <span id="statGamesPlayed">0</span></p>
+                        <p>🏆 <strong>Games Won:</strong> <span id="statGamesWon">0</span></p>
+                        <p>📊 <strong>Win Rate:</strong> <span id="statWinRate">0%</span></p>
+                        <p>⭐ <strong>High Score:</strong> <span id="statHighScore">0</span></p>
+                        <p>🎯 <strong>Total Score:</strong> <span id="statTotalScore">0</span></p>
+                        <p>📈 <strong>Average Score:</strong> <span id="statAvgScore">0</span></p>
+                    </div>
+                </div>
+                <button class="menu-button" onclick="Game.showMainMenu()">Back</button>
+            </div>
+        </div>
+
+        <!-- Game UI -->
+        <div id="gameUI">
+            <span id="playerScore">0</span> : <span id="aiScore">0</span>
+        </div>
+
+        <div id="gameInfo">
+            <div id="difficultyDisplay"></div>
+            <div id="powerUpInfo"></div>
+        </div>
+
+        <div id="instructions">
+            <span class="desktop-instructions">W/S or ↑/↓ to move • SPACE to serve ball • ESC to pause</span>
+            <span class="mobile-instructions-text" style="display: none;">Use touch buttons to move • Tap screen to serve ball</span>
+        </div>
+
+        <!-- Touch Controls -->
+        <div class="touch-controls">
+            <div class="touch-button" id="touchUp">↑</div>
+            <div class="touch-button" id="touchDown">↓</div>
+        </div>
+    </div>
+
+    <!-- Orientation Message for Mobile -->
+    <div class="orientation-message" id="orientationMessage">
+        <h2>🎮 CYBERNETIC PONG 🎮</h2>
+        <div class="rotate-icon">📱</div>
+        <p>Please rotate your device to landscape mode for the best gaming experience!</p>
+        <p style="font-size: 0.9em; opacity: 0.8;">Turn your phone sideways ↻</p>
+    </div>
+
+    <script>
+        // ===== GAME CONFIGURATION =====
+        const CONFIG = {
+            canvas: {
+                width: 800,
+                height: 400
+            },
+            paddle: {
+                width: 15,
+                height: 80,
+                speed: 6,
+                aiSpeed: 4.5
+            },
+            ball: {
+                radius: 8,
+                speed: 5,
+                maxSpeed: 12,
+                trailLength: 10
+            },
+            powerUp: {
+                size: 20,
+                spawnChance: 0.3,
+                duration: 5000
+            },
+            difficulty: {
+                easy: { aiSpeed: 3, ballSpeed: 4 },
+                medium: { aiSpeed: 4.5, ballSpeed: 5 },
+                hard: { aiSpeed: 6, ballSpeed: 6.5 },
+                insane: { aiSpeed: 8, ballSpeed: 8 }
+            },
+            audio: {
+                enabled: true,
+                volume: 0.5
+            },
+            graphics: {
+                particles: true,
+                screenShake: true,
+                trailEffect: true,
+                scanlines: true
+            }
+        };
+
+        // ===== GAME STATE MANAGER =====
+        class GameState {
+            constructor() {
+                this.current = 'menu';
+                this.previous = null;
+                this.gameMode = 'singleplayer';
+                this.difficulty = 'medium';
+                this.isPaused = false;
+                this.isGameRunning = false;
+                this.scores = { player: 0, ai: 0 };
+                this.stats = this.loadStats();
+                this.settings = this.loadSettings();
+            }
+
+            setState(newState) {
+                this.previous = this.current;
+                this.current = newState;
+                this.updateUI();
+            }
+
+            updateUI() {
+                // Hide all overlays
+                document.querySelectorAll('.ui-overlay').forEach(overlay => {
+                    overlay.classList.remove('active');
+                });
+
+                // Show current state overlay
+                const overlayMap = {
+                    'menu': 'mainMenu',
+                    'settings': 'settingsMenu',
+                    'pause': 'pauseMenu',
+                    'gameOver': 'gameOverMenu',
+                    'stats': 'statsMenu'
+                };
+
+                if (overlayMap[this.current]) {
+                    document.getElementById(overlayMap[this.current]).classList.add('active');
+                }
+            }
+
+            loadStats() {
+                const defaultStats = {
+                    gamesPlayed: 0,
+                    gamesWon: 0,
+                    totalScore: 0,
+                    longestRally: 0,
+                    highScore: 0
+                };
+                try {
+                    return JSON.parse(localStorage.getItem('cyberPongStats')) || defaultStats;
+                } catch {
+                    return defaultStats;
+                }
+            }
+
+            saveStats() {
+                localStorage.setItem('cyberPongStats', JSON.stringify(this.stats));
+            }
+
+            loadSettings() {
+                const defaultSettings = {
+                    difficulty: 'medium',
+                    audioEnabled: true,
+                    volume: 0.5,
+                    particlesEnabled: true,
+                    screenShakeEnabled: true
+                };
+                try {
+                    return { ...defaultSettings, ...JSON.parse(localStorage.getItem('cyberPongSettings')) };
+                } catch {
+                    return defaultSettings;
+                }
+            }
+
+            saveSettings() {
+                localStorage.setItem('cyberPongSettings', JSON.stringify(this.settings));
+            }
+        }
+
+        // ===== AUDIO MANAGER =====
+        class AudioManager {
+            constructor() {
+                this.sounds = {};
+                this.music = null;
+                this.enabled = CONFIG.audio.enabled;
+                this.volume = CONFIG.audio.volume;
+                this.initAudio();
+            }
+
+            initAudio() {
+                // Create audio context for Web Audio API
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.createSounds();
+                } catch (e) {
+                    console.warn('Web Audio API not supported');
+                }
+            }
+
+            createSounds() {
+                // Generate synthetic sounds using Web Audio API
+                this.sounds = {
+                    paddleHit: this.createTone(220, 0.1, 'square'),
+                    wallHit: this.createTone(440, 0.1, 'triangle'),
+                    score: this.createTone(880, 0.3, 'sine'),
+                    powerUp: this.createTone(660, 0.2, 'sawtooth'),
+                    gameOver: this.createTone(110, 0.5, 'square')
+                };
+            }
+
+            createTone(frequency, duration, type = 'sine') {
+                return () => {
+                    if (!this.enabled || !this.audioContext) return;
+
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+
+                    gainNode.gain.setValueAtTime(this.volume * 0.3, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration);
+                };
+            }
+
+            play(soundName) {
+                if (this.sounds[soundName]) {
+                    this.sounds[soundName]();
+                }
+            }
+
+            setVolume(volume) {
+                this.volume = Math.max(0, Math.min(1, volume));
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+            }
+        }
+
+        // ===== ENHANCED PARTICLE SYSTEM =====
+        class Particle {
+            constructor(x, y, type = 'default', customColor = null) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.customColor = customColor;
+                this.setupByType();
+            }
+
+            setupByType() {
+                switch (this.type) {
+                    case 'explosion':
+                        this.dx = (Math.random() - 0.5) * 15;
+                        this.dy = (Math.random() - 0.5) * 15;
+                        this.life = 1;
+                        this.decay = 0.03;
+                        this.size = Math.random() * 8 + 3;
+                        this.color = this.customColor || `hsl(${Math.random() * 60 + 300}, 100%, 60%)`;
+                        break;
+                    case 'trail':
+                        this.dx = (Math.random() - 0.5) * 2;
+                        this.dy = (Math.random() - 0.5) * 2;
+                        this.life = 0.8;
+                        this.decay = 0.05;
+                        this.size = Math.random() * 3 + 1;
+                        this.color = '#ffffff';
+                        break;
+                    case 'powerup':
+                        this.dx = (Math.random() - 0.5) * 5;
+                        this.dy = (Math.random() - 0.5) * 5;
+                        this.life = 1;
+                        this.decay = 0.02;
+                        this.size = Math.random() * 6 + 2;
+                        this.color = `hsl(${Math.random() * 120 + 180}, 100%, 60%)`;
+                        break;
+                    default:
+                        this.dx = (Math.random() - 0.5) * 10;
+                        this.dy = (Math.random() - 0.5) * 10;
+                        this.life = 1;
+                        this.decay = 0.02;
+                        this.size = Math.random() * 6 + 2;
+                        this.color = `hsl(${320 + Math.random() * 40}, 100%, 60%)`;
+                }
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                this.dx *= 0.98;
+                this.dy *= 0.98;
+                this.life -= this.decay;
+                this.size *= 0.99;
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                ctx.restore();
+            }
+        }
+
+        // ===== POWER-UP SYSTEM =====
+        class PowerUp {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.size = CONFIG.powerUp.size;
+                this.rotation = 0;
+                this.pulsePhase = 0;
+                this.active = true;
+                this.setupType();
+            }
+
+            setupType() {
+                const types = {
+                    'speed': { color: '#ff4444', effect: 'Increases ball speed' },
+                    'bigPaddle': { color: '#44ff44', effect: 'Bigger paddle' },
+                    'slowMotion': { color: '#4444ff', effect: 'Slows down time' },
+                    'multiball': { color: '#ffff44', effect: 'Multiple balls' },
+                    'shield': { color: '#ff44ff', effect: 'Temporary shield' }
+                };
+
+                this.properties = types[this.type] || types['speed'];
+            }
+
+            update() {
+                this.rotation += 0.05;
+                this.pulsePhase += 0.1;
+            }
+
+            draw(ctx) {
+                if (!this.active) return;
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                const pulse = 1 + Math.sin(this.pulsePhase) * 0.2;
+                ctx.scale(pulse, pulse);
+
+                // Draw power-up icon
+                ctx.strokeStyle = this.properties.color;
+                ctx.fillStyle = this.properties.color + '40';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.rect(-this.size/2, -this.size/2, this.size, this.size);
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw type indicator
+                ctx.fillStyle = this.properties.color;
+                ctx.font = '16px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.type[0].toUpperCase(), 0, 5);
+
+                ctx.restore();
+            }
+
+            checkCollision(ball) {
+                const dx = this.x - ball.x;
+                const dy = this.y - ball.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < this.size/2 + ball.radius;
+            }
+        }
+
+        // ===== ENHANCED BALL CLASS =====
+        class Ball {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = CONFIG.ball.radius;
+                this.dx = 0; // Start stationary
+                this.dy = 0;
+                this.speed = CONFIG.ball.speed;
+                this.trail = [];
+                this.type = 'normal';
+                this.effects = new Set();
+            }
+
+            reset() {
+                this.x = CONFIG.canvas.width / 2;
+                this.y = CONFIG.canvas.height / 2;
+                this.dx = Math.random() > 0.5 ? this.speed : -this.speed;
+                this.dy = (Math.random() - 0.5) * this.speed;
+                this.trail = [];
+                this.effects.clear();
+            }
+
+            update() {
+                // Add to trail
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > CONFIG.ball.trailLength) {
+                    this.trail.shift();
+                }
+
+                this.x += this.dx;
+                this.y += this.dy;
+
+                // Limit speed
+                const maxSpeed = CONFIG.ball.maxSpeed;
+                if (Math.abs(this.dx) > maxSpeed) this.dx = this.dx > 0 ? maxSpeed : -maxSpeed;
+                if (Math.abs(this.dy) > maxSpeed) this.dy = this.dy > 0 ? maxSpeed : -maxSpeed;
+            }
+
+            draw(ctx) {
+                // Draw trail
+                if (CONFIG.graphics.trailEffect) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    this.trail.forEach((point, index) => {
+                        if (index === 0) {
+                            ctx.moveTo(point.x, point.y);
+                        } else {
+                            ctx.lineTo(point.x, point.y);
+                        }
+                    });
+                    ctx.stroke();
+                }
+
+                // Draw ball with effects
+                let color = '#ffffff';
+                if (this.effects.has('speed')) color = '#ff4444';
+                if (this.effects.has('slow')) color = '#4444ff';
+
+                ctx.save();
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ===== ENHANCED PADDLE CLASS =====
+        class Paddle {
+            constructor(x, y, isPlayer = true) {
+                this.x = x;
+                this.y = y;
+                this.width = CONFIG.paddle.width;
+                this.height = CONFIG.paddle.height;
+                this.dy = 0;
+                this.isPlayer = isPlayer;
+                this.abilities = new Set();
+                this.abilityTimers = new Map();
+                this.originalHeight = this.height;
+            }
+
+            update(ball = null) {
+                if (this.isPlayer) {
+                    this.updatePlayer();
+                } else {
+                    this.updateAI(ball);
+                }
+
+                // Update position
+                this.y += this.dy;
+                this.y = Math.max(0, Math.min(CONFIG.canvas.height - this.height, this.y));
+
+                // Update abilities
+                this.updateAbilities();
+            }
+
+            updatePlayer() {
+                const speed = CONFIG.paddle.speed;
+                if (inputManager.isPressed('up')) {
+                    this.dy = -speed;
+                } else if (inputManager.isPressed('down')) {
+                    this.dy = speed;
+                } else {
+                    this.dy = 0;
+                }
+            }
+
+            updateAI(ball) {
+                if (!ball) return;
+
+                const aiCenter = this.y + this.height / 2;
+                const ballCenter = ball.y;
+                const difficulty = gameState.settings.difficulty;
+                const aiSpeed = CONFIG.difficulty[difficulty].aiSpeed;
+
+                if (ballCenter < aiCenter - 10) {
+                    this.dy = -aiSpeed;
+                } else if (ballCenter > aiCenter + 10) {
+                    this.dy = aiSpeed;
+                } else {
+                    this.dy = 0;
+                }
+            }
+
+            updateAbilities() {
+                // Update ability timers
+                for (let [ability, timer] of this.abilityTimers) {
+                    timer -= 16; // Assuming 60fps
+                    if (timer <= 0) {
+                        this.removeAbility(ability);
+                    } else {
+                        this.abilityTimers.set(ability, timer);
+                    }
+                }
+            }
+
+            addAbility(ability, duration = 5000) {
+                this.abilities.add(ability);
+                this.abilityTimers.set(ability, duration);
+
+                switch (ability) {
+                    case 'bigPaddle':
+                        this.height = this.originalHeight * 1.5;
+                        break;
+                    case 'shield':
+                        // Visual effect will be handled in draw method
+                        break;
+                }
+            }
+
+            removeAbility(ability) {
+                this.abilities.delete(ability);
+                this.abilityTimers.delete(ability);
+
+                switch (ability) {
+                    case 'bigPaddle':
+                        this.height = this.originalHeight;
+                        break;
+                }
+            }
+
+            draw(ctx) {
+                let color = this.isPlayer ? '#00ffff' : '#ff0080';
+
+                // Apply ability effects
+                if (this.abilities.has('shield')) {
+                    color = '#ffff00';
+                }
+
+                ctx.save();
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.restore();
+
+                // Draw ability indicators
+                if (this.abilities.has('shield')) {
+                    ctx.strokeStyle = '#ffff00';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.rect(this.x - 5, this.y - 5, this.width + 10, this.height + 10);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // ===== INPUT MANAGER =====
+        class InputManager {
+            constructor() {
+                this.keys = {};
+                this.touches = {};
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                // Keyboard events
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.key.toLowerCase()] = true;
+                    this.handleKeyPress(e.key.toLowerCase());
+                    e.preventDefault();
+                });
+
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+
+                // Touch events for mobile
+                const touchUp = document.getElementById('touchUp');
+                const touchDown = document.getElementById('touchDown');
+
+                if (touchUp && touchDown) {
+                    // Touch start events
+                    touchUp.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowup'] = true;
+                        this.keys['w'] = true;
+                    });
+
+                    touchUp.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowup'] = false;
+                        this.keys['w'] = false;
+                    });
+
+                    touchDown.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowdown'] = true;
+                        this.keys['s'] = true;
+                    });
+
+                    touchDown.addEventListener('touchend', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowdown'] = false;
+                        this.keys['s'] = false;
+                    });
+
+                    // Also handle mouse events for testing
+                    touchUp.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowup'] = true;
+                        this.keys['w'] = true;
+                    });
+
+                    touchUp.addEventListener('mouseup', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowup'] = false;
+                        this.keys['w'] = false;
+                    });
+
+                    touchDown.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowdown'] = true;
+                        this.keys['s'] = true;
+                    });
+
+                    touchDown.addEventListener('mouseup', (e) => {
+                        e.preventDefault();
+                        this.keys['arrowdown'] = false;
+                        this.keys['s'] = false;
+                    });
+                }
+
+                // Prevent context menu on touch
+                document.addEventListener('contextmenu', e => e.preventDefault());
+
+                // Add tap-to-serve functionality for mobile
+                if (Game.isMobileDevice()) {
+                    const canvas = document.getElementById('gameCanvas');
+                    canvas.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        if (gameState.current === 'game' && !gameState.isGameRunning) {
+                            Game.startRound();
+                        }
+                    });
+
+                    canvas.addEventListener('click', (e) => {
+                        if (gameState.current === 'game' && !gameState.isGameRunning) {
+                            Game.startRound();
+                        }
+                    });
+                }
+            }
+
+            handleKeyPress(key) {
+                switch (key) {
+                    case ' ':
+                    case 'space':
+                        if (gameState.current === 'menu') {
+                            // Start single player game from menu
+                            Game.startSinglePlayer();
+                        } else if (gameState.current === 'game' && !gameState.isGameRunning) {
+                            // Start round when in game but ball is not moving
+                            Game.startRound();
+                        }
+                        break;
+                    case 'escape':
+                        if (gameState.current === 'game') {
+                            Game.togglePause();
+                        }
+                        break;
+                    case 'f':
+                        Game.toggleFullscreen();
+                        break;
+                }
+            }
+
+            isPressed(action) {
+                switch (action) {
+                    case 'up':
+                        return this.keys['w'] || this.keys['arrowup'];
+                    case 'down':
+                        return this.keys['s'] || this.keys['arrowdown'];
+                    case 'start':
+                        return this.keys[' '] || this.keys['space'];
+                    case 'pause':
+                        return this.keys['escape'];
+                    default:
+                        return this.keys[action];
+                }
+            }
+        }
+
+        // ===== MAIN GAME CLASS =====
+        class Game {
+            static init() {
+                // Initialize canvas
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                // Initialize managers
+                window.gameState = new GameState();
+                window.audioManager = new AudioManager();
+                window.inputManager = new InputManager();
+
+                // Initialize new systems
+                this.backgroundAnimation = new BackgroundAnimation();
+                this.performanceMonitor = new PerformanceMonitor();
+                this.achievementSystem = new AchievementSystem();
+
+                // Initialize game objects
+                this.particles = [];
+                this.powerUps = [];
+                this.balls = [];
+                this.screenShake = { x: 0, y: 0, intensity: 0 };
+                this.rallyCount = 0;
+                this.powerUpCount = 0;
+                this.gameStartTime = 0;
+
+                // Create paddles
+                this.player = new Paddle(20, this.canvas.height / 2 - CONFIG.paddle.height / 2, true);
+                this.ai = new Paddle(this.canvas.width - 20 - CONFIG.paddle.width, this.canvas.height / 2 - CONFIG.paddle.height / 2, false);
+
+                // Create initial ball
+                this.balls.push(new Ball(this.canvas.width / 2, this.canvas.height / 2));
+
+                // Setup responsive canvas
+                this.setupCanvas();
+
+                // Create performance display
+                this.performanceMonitor.createDisplay();
+
+                // Start game loop
+                this.gameLoop();
+            }
+
+            static setupCanvas() {
+                const container = document.getElementById('gameContainer');
+                const canvas = this.canvas;
+
+                // Initial setup
+                this.resizeCanvas();
+
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.resizeCanvas();
+                    this.updateOrientationMessage();
+                });
+
+                // Handle orientation change
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => {
+                        this.resizeCanvas();
+                        this.updateOrientationMessage();
+                    }, 100);
+                });
+
+                // Handle screen orientation change (modern browsers)
+                if (screen.orientation) {
+                    screen.orientation.addEventListener('change', () => {
+                        setTimeout(() => {
+                            this.resizeCanvas();
+                            this.updateOrientationMessage();
+                        }, 100);
+                    });
+                }
+            }
+
+            static resizeCanvas() {
+                const container = document.getElementById('gameContainer');
+                const canvas = this.canvas;
+
+                // Get container dimensions
+                const rect = container.getBoundingClientRect();
+
+                // For mobile devices
+                if (this.isMobileDevice() || window.innerWidth <= 768) {
+                    const isLandscape = window.innerWidth > window.innerHeight;
+
+                    if (isLandscape) {
+                        // Landscape mode - optimize for gaming
+                        const touchControlsHeight = 70;
+                        const uiHeight = 40; // Space for score and info
+                        const availableHeight = window.innerHeight - touchControlsHeight - uiHeight;
+                        const availableWidth = window.innerWidth;
+
+                        // Set canvas display size
+                        canvas.style.width = availableWidth + 'px';
+                        canvas.style.height = (availableHeight + uiHeight) + 'px';
+
+                        // Calculate optimal canvas internal dimensions
+                        const aspectRatio = CONFIG.canvas.width / CONFIG.canvas.height;
+                        const screenAspectRatio = availableWidth / availableHeight;
+
+                        if (screenAspectRatio > aspectRatio) {
+                            // Screen is wider - use full height
+                            canvas.height = Math.max(300, availableHeight);
+                            canvas.width = canvas.height * aspectRatio;
+                        } else {
+                            // Screen is narrower - use full width
+                            canvas.width = Math.max(400, availableWidth);
+                            canvas.height = canvas.width / aspectRatio;
+                        }
+
+                        // Ensure minimum playable size
+                        if (canvas.width < 400) {
+                            canvas.width = 400;
+                            canvas.height = 200;
+                        }
+                    } else {
+                        // Portrait mode - show orientation message if in game
+                        const touchControlsHeight = 120;
+                        const availableHeight = window.innerHeight - touchControlsHeight;
+
+                        canvas.style.width = window.innerWidth + 'px';
+                        canvas.style.height = availableHeight + 'px';
+
+                        // Maintain aspect ratio
+                        const aspectRatio = CONFIG.canvas.width / CONFIG.canvas.height;
+                        const newWidth = availableHeight * aspectRatio;
+
+                        if (newWidth <= window.innerWidth) {
+                            canvas.width = newWidth;
+                            canvas.height = availableHeight;
+                        } else {
+                            canvas.width = window.innerWidth;
+                            canvas.height = window.innerWidth / aspectRatio;
+                        }
+                    }
+                } else {
+                    // Desktop sizing
+                    canvas.style.width = rect.width + 'px';
+                    canvas.style.height = rect.height + 'px';
+                    canvas.width = CONFIG.canvas.width;
+                    canvas.height = CONFIG.canvas.height;
+                }
+
+                // Update game objects positions if they exist
+                if (this.player && this.ai) {
+                    this.player.x = 20;
+                    this.ai.x = canvas.width - 20 - CONFIG.paddle.width;
+
+                    // Keep paddles within bounds
+                    this.player.y = Math.min(this.player.y || 0, canvas.height - CONFIG.paddle.height);
+                    this.ai.y = Math.min(this.ai.y || 0, canvas.height - CONFIG.paddle.height);
+                }
+            }
+
+            static startSinglePlayer() {
+                gameState.gameMode = 'singleplayer';
+                gameState.setState('game');
+
+                // Ensure game objects are initialized
+                this.initializeGameObjects();
+                this.resetGame();
+
+                // Request landscape orientation on mobile
+                this.requestLandscapeOrientation();
+
+                // Auto-start the first round
+                setTimeout(() => {
+                    this.startRound();
+                }, 100);
+            }
+
+            static initializeGameObjects() {
+                // Initialize game objects if they don't exist
+                if (!this.particles) this.particles = [];
+                if (!this.powerUps) this.powerUps = [];
+                if (!this.balls) this.balls = [];
+                if (!this.screenShake) this.screenShake = { x: 0, y: 0, intensity: 0 };
+
+                // Create paddles if they don't exist
+                if (!this.player) {
+                    this.player = new Paddle(20, this.canvas.height / 2 - CONFIG.paddle.height / 2, true);
+                }
+                if (!this.ai) {
+                    this.ai = new Paddle(this.canvas.width - 20 - CONFIG.paddle.width, this.canvas.height / 2 - CONFIG.paddle.height / 2, false);
+                }
+
+                // Create initial ball if none exist
+                if (this.balls.length === 0) {
+                    this.balls.push(new Ball(this.canvas.width / 2, this.canvas.height / 2));
+                }
+            }
+
+            static requestLandscapeOrientation() {
+                // Check if we're on a mobile device
+                if (this.isMobileDevice()) {
+                    try {
+                        // Try to lock orientation to landscape
+                        if (screen.orientation && screen.orientation.lock) {
+                            screen.orientation.lock('landscape').catch(err => {
+                                console.log('Orientation lock not supported or failed:', err);
+                                this.showOrientationMessage();
+                            });
+                        } else {
+                            // Fallback: show orientation message
+                            this.showOrientationMessage();
+                        }
+                    } catch (error) {
+                        console.log('Orientation API not supported:', error);
+                        this.showOrientationMessage();
+                    }
+                }
+            }
+
+            static isMobileDevice() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                       (window.innerWidth <= 768 && 'ontouchstart' in window);
+            }
+
+            static updateInstructions() {
+                const desktopInstructions = document.querySelector('.desktop-instructions');
+                const mobileInstructions = document.querySelector('.mobile-instructions-text');
+
+                if (this.isMobileDevice()) {
+                    if (desktopInstructions) desktopInstructions.style.display = 'none';
+                    if (mobileInstructions) mobileInstructions.style.display = 'inline';
+                } else {
+                    if (desktopInstructions) desktopInstructions.style.display = 'inline';
+                    if (mobileInstructions) mobileInstructions.style.display = 'none';
+                }
+            }
+
+            static showOrientationMessage() {
+                const orientationMsg = document.getElementById('orientationMessage');
+                if (orientationMsg && this.isMobileDevice()) {
+                    // Show message only in portrait mode during gameplay
+                    this.updateOrientationMessage();
+                }
+            }
+
+            static updateOrientationMessage() {
+                const orientationMsg = document.getElementById('orientationMessage');
+                if (!orientationMsg) return;
+
+                const isPortrait = window.innerHeight > window.innerWidth;
+                const isInGame = gameState.current === 'game';
+
+                if (isPortrait && isInGame && this.isMobileDevice()) {
+                    orientationMsg.classList.add('show-in-game');
+                } else {
+                    orientationMsg.classList.remove('show-in-game');
+                }
+            }
+
+            static resetGame() {
+                gameState.scores = { player: 0, ai: 0 };
+                gameState.isGameRunning = false;
+                this.updateScoreDisplay();
+
+                // Reset game objects
+                this.balls = [new Ball(this.canvas.width / 2, this.canvas.height / 2)];
+                this.particles = [];
+                this.powerUps = [];
+
+                // Ensure paddles exist before resetting them
+                if (!this.player) {
+                    this.player = new Paddle(20, this.canvas.height / 2 - CONFIG.paddle.height / 2, true);
+                }
+                if (!this.ai) {
+                    this.ai = new Paddle(this.canvas.width - 20 - CONFIG.paddle.width, this.canvas.height / 2 - CONFIG.paddle.height / 2, false);
+                }
+
+                // Reset paddles
+                this.player.y = this.canvas.height / 2 - CONFIG.paddle.height / 2;
+                this.ai.y = this.canvas.height / 2 - CONFIG.paddle.height / 2;
+            }
+
+            static startRound() {
+                console.log('Starting round...');
+                gameState.isGameRunning = true;
+
+                // Ensure balls exist
+                if (!this.balls || this.balls.length === 0) {
+                    this.balls = [new Ball(this.canvas.width / 2, this.canvas.height / 2)];
+                }
+
+                this.balls.forEach(ball => ball.reset());
+                console.log('Ball reset, position:', this.balls[0].x, this.balls[0].y, 'velocity:', this.balls[0].dx, this.balls[0].dy);
+
+                if (audioManager) {
+                    audioManager.play('score');
+                }
+            }
+
+            static togglePause() {
+                if (gameState.current === 'game') {
+                    gameState.isPaused = !gameState.isPaused;
+                    if (gameState.isPaused) {
+                        gameState.setState('pause');
+                    } else {
+                        gameState.setState('game');
+                    }
+                }
+            }
+
+            static resumeGame() {
+                gameState.isPaused = false;
+                gameState.setState('game');
+            }
+
+            static restartGame() {
+                this.resetGame();
+                gameState.setState('game');
+            }
+
+            static showMainMenu() {
+                gameState.setState('menu');
+                gameState.isGameRunning = false;
+                gameState.isPaused = false;
+
+                // Hide orientation message when returning to menu
+                const orientationMsg = document.getElementById('orientationMessage');
+                if (orientationMsg) {
+                    orientationMsg.classList.remove('show-in-game');
+                }
+
+                // Unlock orientation when returning to menu
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock().catch(() => {
+                        // Ignore errors - orientation unlock is not critical
+                    });
+                }
+            }
+
+            static showSettings() {
+                gameState.setState('settings');
+                this.populateSettings();
+            }
+
+            static showStats() {
+                gameState.setState('stats');
+                this.populateStats();
+            }
+
+            static populateSettings() {
+                const settingsContent = document.getElementById('settingsContent');
+                settingsContent.innerHTML = `
+                    <div style="margin: 20px 0;">
+                        <label>Difficulty: </label>
+                        <select id="difficultySelect" onchange="Game.changeDifficulty(this.value)">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="insane">Insane</option>
+                        </select>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Audio: </label>
+                        <input type="checkbox" id="audioToggle" ${gameState.settings.audioEnabled ? 'checked' : ''} onchange="Game.toggleAudio()">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Volume: </label>
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="${gameState.settings.volume}" onchange="Game.changeVolume(this.value)">
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <label>Particles: </label>
+                        <input type="checkbox" id="particlesToggle" ${gameState.settings.particlesEnabled ? 'checked' : ''} onchange="Game.toggleParticles()">
+                    </div>
+                `;
+
+                document.getElementById('difficultySelect').value = gameState.settings.difficulty;
+            }
+
+            static populateStats() {
+                const stats = gameState.stats;
+                const winRate = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+                const avgScore = stats.gamesPlayed > 0 ? Math.round(stats.totalScore / stats.gamesPlayed) : 0;
+
+                document.getElementById('statGamesPlayed').textContent = stats.gamesPlayed;
+                document.getElementById('statGamesWon').textContent = stats.gamesWon;
+                document.getElementById('statWinRate').textContent = winRate + '%';
+                document.getElementById('statHighScore').textContent = stats.highScore;
+                document.getElementById('statTotalScore').textContent = stats.totalScore;
+                document.getElementById('statAvgScore').textContent = avgScore;
+            }
+
+            static changeDifficulty(difficulty) {
+                gameState.settings.difficulty = difficulty;
+                gameState.difficulty = difficulty;
+                gameState.saveSettings();
+            }
+
+            static toggleAudio() {
+                gameState.settings.audioEnabled = !gameState.settings.audioEnabled;
+                audioManager.enabled = gameState.settings.audioEnabled;
+                gameState.saveSettings();
+            }
+
+            static changeVolume(volume) {
+                gameState.settings.volume = parseFloat(volume);
+                audioManager.setVolume(gameState.settings.volume);
+                gameState.saveSettings();
+            }
+
+            static toggleParticles() {
+                gameState.settings.particlesEnabled = !gameState.settings.particlesEnabled;
+                CONFIG.graphics.particles = gameState.settings.particlesEnabled;
+                gameState.saveSettings();
+            }
+
+            static toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+
+            static createExplosion(x, y, count = 15, type = 'explosion', color = null) {
+                if (!CONFIG.graphics.particles) return;
+
+                for (let i = 0; i < count; i++) {
+                    this.particles.push(new Particle(x, y, type, color));
+                }
+            }
+
+            static addScreenShake(intensity = 10) {
+                if (!CONFIG.graphics.screenShake) return;
+                this.screenShake.intensity = Math.max(this.screenShake.intensity, intensity);
+            }
+
+            static updateScoreDisplay() {
+                document.getElementById('playerScore').textContent = gameState.scores.player;
+                document.getElementById('aiScore').textContent = gameState.scores.ai;
+            }
+
+            // ===== GAME UPDATE METHODS =====
+            static updateGame() {
+                if (gameState.current !== 'game' || gameState.isPaused) return;
+
+                // Update new systems
+                this.backgroundAnimation.update();
+                this.performanceMonitor.update();
+
+                // Update paddles
+                this.player.update();
+                this.ai.update(this.balls[0]); // AI follows first ball
+
+                // Update balls
+                this.balls.forEach((ball, index) => {
+                    if (gameState.isGameRunning) {
+                        ball.update();
+                        this.checkCollisions(ball, index);
+                    }
+                });
+
+                // Update particles
+                this.updateParticles();
+
+                // Update power-ups
+                this.updatePowerUps();
+
+                // Update screen shake
+                this.updateScreenShake();
+
+                // Spawn power-ups randomly
+                if (Math.random() < 0.001 && this.powerUps.length < 2) {
+                    this.spawnPowerUp();
+                }
+            }
+
+            static checkCollisions(ball, ballIndex) {
+                // Wall collision (top/bottom)
+                if (ball.y <= ball.radius || ball.y >= this.canvas.height - ball.radius) {
+                    ball.dy = -ball.dy;
+                    this.createExplosion(ball.x, ball.y, 8, 'explosion', '#ffffff'); // White for walls
+                    this.addScreenShake(5);
+                    audioManager.play('wallHit');
+                }
+
+                // Player paddle collision
+                if (ball.x <= this.player.x + this.player.width + ball.radius &&
+                    ball.y >= this.player.y && ball.y <= this.player.y + this.player.height) {
+                    if (ball.dx < 0) {
+                        ball.dx = -ball.dx;
+                        ball.dy += this.player.dy * 0.3;
+                        ball.dx *= 1.05; // Increase speed slightly
+                        this.createExplosion(ball.x, ball.y, 12, 'explosion', '#00ffff'); // Cyan for player
+                        this.addScreenShake(8);
+                        audioManager.play('paddleHit');
+                        this.rallyCount++;
+                    }
+                }
+
+                // AI paddle collision
+                if (ball.x >= this.ai.x - ball.radius &&
+                    ball.y >= this.ai.y && ball.y <= this.ai.y + this.ai.height) {
+                    if (ball.dx > 0) {
+                        ball.dx = -ball.dx;
+                        ball.dy += this.ai.dy * 0.3;
+                        ball.dx *= 1.05;
+                        this.createExplosion(ball.x, ball.y, 12, 'explosion', '#ff0080'); // Pink/magenta for AI
+                        this.addScreenShake(8);
+                        audioManager.play('paddleHit');
+                        this.rallyCount++;
+                    }
+                }
+
+                // Power-up collisions
+                this.powerUps.forEach((powerUp, index) => {
+                    if (powerUp.checkCollision(ball)) {
+                        this.activatePowerUp(powerUp);
+                        this.powerUps.splice(index, 1);
+                        this.powerUpCount++;
+                    }
+                });
+
+                // Score points
+                if (ball.x < 0) {
+                    gameState.scores.ai++;
+                    this.createExplosion(ball.x, ball.y, 20);
+                    this.addScreenShake(15);
+                    audioManager.play('score');
+                    this.removeBall(ballIndex);
+                    this.checkGameEnd();
+                } else if (ball.x > this.canvas.width) {
+                    gameState.scores.player++;
+                    this.createExplosion(ball.x, ball.y, 20);
+                    this.addScreenShake(15);
+                    audioManager.play('score');
+                    this.removeBall(ballIndex);
+                    this.checkGameEnd();
+                }
+
+                this.updateScoreDisplay();
+            }
+
+            static removeBall(ballIndex) {
+                // Remove the specific ball that scored
+                this.balls.splice(ballIndex, 1);
+
+                // If no balls left, stop the game and create a new ball
+                if (this.balls.length === 0) {
+                    gameState.isGameRunning = false;
+                    this.balls.push(new Ball(this.canvas.width / 2, this.canvas.height / 2));
+                    this.rallyCount = 0; // Reset rally counter
+                }
+            }
+
+            static resetBall(ball) {
+                ball.reset();
+                gameState.isGameRunning = false;
+                this.rallyCount = 0; // Reset rally counter
+            }
+
+            static checkGameEnd() {
+                const winScore = 5; // Game ends at 5 points
+                if (gameState.scores.player >= winScore || gameState.scores.ai >= winScore) {
+                    this.endGame();
+                }
+            }
+
+            static endGame() {
+                gameState.isGameRunning = false;
+
+                // Check achievements
+                this.achievementSystem.checkAchievement('win', {
+                    playerScore: gameState.scores.player,
+                    aiScore: gameState.scores.ai
+                });
+
+                if (this.rallyCount >= 10) {
+                    this.achievementSystem.checkAchievement('rally', { hits: this.rallyCount });
+                }
+
+                // Update statistics
+                gameState.stats.gamesPlayed++;
+                if (gameState.scores.player > gameState.scores.ai) {
+                    gameState.stats.gamesWon++;
+                }
+                gameState.stats.totalScore += gameState.scores.player;
+                gameState.stats.highScore = Math.max(gameState.stats.highScore, gameState.scores.player);
+                gameState.saveStats();
+
+                // Show game over screen
+                const winner = gameState.scores.player > gameState.scores.ai ? 'PLAYER WINS!' : 'AI WINS!';
+                document.getElementById('gameOverTitle').textContent = winner;
+                document.getElementById('gameOverStats').textContent =
+                    `Final Score: ${gameState.scores.player} - ${gameState.scores.ai}`;
+
+                gameState.setState('gameOver');
+                audioManager.play('gameOver');
+            }
+
+            static spawnPowerUp() {
+                const types = ['speed', 'bigPaddle', 'slowMotion', 'multiball', 'shield'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const x = this.canvas.width * 0.3 + Math.random() * this.canvas.width * 0.4;
+                const y = this.canvas.height * 0.2 + Math.random() * this.canvas.height * 0.6;
+
+                this.powerUps.push(new PowerUp(x, y, type));
+            }
+
+            static activatePowerUp(powerUp) {
+                audioManager.play('powerUp');
+                this.createExplosion(powerUp.x, powerUp.y, 15, 'powerup');
+
+                switch (powerUp.type) {
+                    case 'speed':
+                        this.balls.forEach(ball => {
+                            ball.effects.add('speed');
+                            ball.dx *= 1.5;
+                            ball.dy *= 1.5;
+                        });
+                        setTimeout(() => {
+                            this.balls.forEach(ball => {
+                                ball.effects.delete('speed');
+                                ball.dx /= 1.5;
+                                ball.dy /= 1.5;
+                            });
+                        }, 3000);
+                        break;
+
+                    case 'bigPaddle':
+                        this.player.addAbility('bigPaddle', 5000);
+                        break;
+
+                    case 'slowMotion':
+                        // TODO: Implement slow motion effect
+                        break;
+
+                    case 'multiball':
+                        if (this.balls.length < 3) {
+                            const newBall = new Ball(this.balls[0].x, this.balls[0].y);
+                            newBall.dx = -this.balls[0].dx;
+                            newBall.dy = this.balls[0].dy * 0.8;
+                            this.balls.push(newBall);
+                        }
+                        break;
+
+                    case 'shield':
+                        this.player.addAbility('shield', 3000);
+                        break;
+                }
+            }
+
+            static updateParticles() {
+                this.particles = this.particles.filter(particle => {
+                    particle.update();
+                    return particle.life > 0;
+                });
+            }
+
+            static updatePowerUps() {
+                this.powerUps.forEach(powerUp => powerUp.update());
+            }
+
+            static updateScreenShake() {
+                if (this.screenShake.intensity > 0) {
+                    this.screenShake.x = (Math.random() - 0.5) * this.screenShake.intensity;
+                    this.screenShake.y = (Math.random() - 0.5) * this.screenShake.intensity;
+                    this.screenShake.intensity *= 0.9;
+
+                    if (this.screenShake.intensity < 0.1) {
+                        this.screenShake.intensity = 0;
+                        this.screenShake.x = 0;
+                        this.screenShake.y = 0;
+                    }
+                }
+            }
+
+            // ===== RENDERING SYSTEM =====
+            static draw() {
+                const ctx = this.ctx;
+
+                // Apply screen shake
+                ctx.save();
+                ctx.translate(this.screenShake.x, this.screenShake.y);
+
+                // Clear canvas with trail effect
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw background effects
+                this.drawBackground();
+
+                // Draw background animation
+                if (gameState.current === 'menu') {
+                    this.backgroundAnimation.draw(ctx);
+                }
+
+                // Draw game objects
+                if (gameState.current === 'game') {
+                    this.player.draw(ctx);
+                    this.ai.draw(ctx);
+                    this.balls.forEach(ball => ball.draw(ctx));
+                    this.powerUps.forEach(powerUp => powerUp.draw(ctx));
+
+                    // Debug: Draw ball position info
+                    if (this.balls.length > 0) {
+                        ctx.fillStyle = '#00ffff';
+                        ctx.font = '12px Courier New';
+                        ctx.fillText(`Ball: ${Math.round(this.balls[0].x)}, ${Math.round(this.balls[0].y)} | Speed: ${Math.round(this.balls[0].dx)}, ${Math.round(this.balls[0].dy)}`, 10, 30);
+                        ctx.fillText(`Running: ${gameState.isGameRunning} | Balls: ${this.balls.length}`, 10, 50);
+                    }
+                }
+
+                // Draw particles
+                if (CONFIG.graphics.particles) {
+                    this.particles.forEach(particle => particle.draw(ctx));
+                }
+
+                // Draw scanlines effect
+                if (CONFIG.graphics.scanlines) {
+                    this.drawScanlines();
+                }
+
+                ctx.restore();
+            }
+
+            static drawBackground() {
+                const ctx = this.ctx;
+
+                // Draw grid pattern
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < this.canvas.width; i += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, this.canvas.height);
+                    ctx.stroke();
+                }
+                for (let i = 0; i < this.canvas.height; i += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(this.canvas.width, i);
+                    ctx.stroke();
+                }
+
+                // Draw center line
+                ctx.setLineDash([10, 10]);
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.canvas.width / 2, 0);
+                ctx.lineTo(this.canvas.width / 2, this.canvas.height);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            static drawScanlines() {
+                const ctx = this.ctx;
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.03)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < this.canvas.height; i += 4) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(this.canvas.width, i);
+                    ctx.stroke();
+                }
+            }
+
+            // ===== MAIN GAME LOOP =====
+            static gameLoop() {
+                this.updateGame();
+                this.draw();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+
+        // ===== INITIALIZE GAME =====
+        // Initialize the game when the page loads
+        window.addEventListener('load', () => {
+            Game.init();
+
+            // Initial setup for mobile
+            setTimeout(() => {
+                Game.updateOrientationMessage();
+                Game.updateInstructions();
+            }, 100);
+        });
+
+        // Handle visibility change (pause when tab is not active)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && gameState.current === 'game' && gameState.isGameRunning) {
+                Game.togglePause();
+            }
+        });
+
+        // ===== ADDITIONAL FEATURES =====
+
+        // Background Animation System
+        class BackgroundAnimation {
+            constructor() {
+                this.particles = [];
+                this.time = 0;
+            }
+
+            update() {
+                this.time += 0.01;
+
+                // Add floating particles
+                if (Math.random() < 0.02) {
+                    this.particles.push({
+                        x: Math.random() * CONFIG.canvas.width,
+                        y: CONFIG.canvas.height + 10,
+                        dx: (Math.random() - 0.5) * 0.5,
+                        dy: -Math.random() * 2 - 1,
+                        size: Math.random() * 3 + 1,
+                        life: 1,
+                        decay: 0.005
+                    });
+                }
+
+                // Update particles
+                this.particles = this.particles.filter(p => {
+                    p.x += p.dx;
+                    p.y += p.dy;
+                    p.life -= p.decay;
+                    return p.life > 0 && p.y > -10;
+                });
+            }
+
+            draw(ctx) {
+                ctx.save();
+                this.particles.forEach(p => {
+                    ctx.globalAlpha = p.life * 0.3;
+                    ctx.fillStyle = '#00ffff';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.restore();
+            }
+        }
+
+        // Performance Monitor
+        class PerformanceMonitor {
+            constructor() {
+                this.fps = 60;
+                this.frameCount = 0;
+                this.lastTime = performance.now();
+                this.fpsDisplay = null;
+            }
+
+            update() {
+                this.frameCount++;
+                const currentTime = performance.now();
+
+                if (currentTime - this.lastTime >= 1000) {
+                    this.fps = Math.round((this.frameCount * 1000) / (currentTime - this.lastTime));
+                    this.frameCount = 0;
+                    this.lastTime = currentTime;
+
+                    if (this.fpsDisplay) {
+                        this.fpsDisplay.textContent = `FPS: ${this.fps}`;
+                    }
+                }
+            }
+
+            createDisplay() {
+                this.fpsDisplay = document.createElement('div');
+                this.fpsDisplay.style.cssText = `
+                    position: fixed;
+                    top: 10px;
+                    right: 10px;
+                    color: #00ffff;
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    z-index: 1000;
+                    opacity: 0.7;
+                `;
+                document.body.appendChild(this.fpsDisplay);
+            }
+        }
+
+        // Achievement System
+        class AchievementSystem {
+            constructor() {
+                this.achievements = {
+                    firstWin: { name: 'First Victory', description: 'Win your first game', unlocked: false },
+                    speedDemon: { name: 'Speed Demon', description: 'Hit the ball 10 times in a row', unlocked: false },
+                    powerUser: { name: 'Power User', description: 'Collect 5 power-ups in one game', unlocked: false },
+                    perfectGame: { name: 'Perfect Game', description: 'Win 5-0', unlocked: false },
+                    survivor: { name: 'Survivor', description: 'Play for 5 minutes straight', unlocked: false }
+                };
+                this.loadAchievements();
+            }
+
+            checkAchievement(type, data) {
+                switch (type) {
+                    case 'win':
+                        if (!this.achievements.firstWin.unlocked) {
+                            this.unlock('firstWin');
+                        }
+                        if (data.playerScore === 5 && data.aiScore === 0) {
+                            this.unlock('perfectGame');
+                        }
+                        break;
+                    case 'powerup':
+                        // Track power-ups collected
+                        break;
+                    case 'rally':
+                        if (data.hits >= 10) {
+                            this.unlock('speedDemon');
+                        }
+                        break;
+                }
+            }
+
+            unlock(achievementId) {
+                if (!this.achievements[achievementId].unlocked) {
+                    this.achievements[achievementId].unlocked = true;
+                    this.showNotification(this.achievements[achievementId]);
+                    this.saveAchievements();
+                }
+            }
+
+            showNotification(achievement) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    right: 20px;
+                    background: rgba(0, 255, 255, 0.9);
+                    color: #000;
+                    padding: 15px;
+                    border-radius: 5px;
+                    font-family: 'Courier New', monospace;
+                    z-index: 1001;
+                    animation: slideIn 0.5s ease-out;
+                `;
+                notification.innerHTML = `
+                    <strong>Achievement Unlocked!</strong><br>
+                    ${achievement.name}<br>
+                    <small>${achievement.description}</small>
+                `;
+
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            }
+
+            loadAchievements() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('cyberPongAchievements'));
+                    if (saved) {
+                        Object.assign(this.achievements, saved);
+                    }
+                } catch (e) {
+                    console.warn('Could not load achievements');
+                }
+            }
+
+            saveAchievements() {
+                localStorage.setItem('cyberPongAchievements', JSON.stringify(this.achievements));
+            }
+        }
+
+        // Add CSS animation for achievement notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+
+            .menu-button:hover {
+                animation: pulse 0.5s ease-in-out;
+            }
+
+            /* Loading animation */
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            .loading {
+                border: 2px solid rgba(0, 255, 255, 0.3);
+                border-top: 2px solid #00ffff;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ===== FINAL GAME ENHANCEMENTS =====
+
+        // Add keyboard shortcuts info
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                alert(`
+🎮 CYBERNETIC PONG - CONTROLS & FEATURES 🎮
+
+CONTROLS:
+• W/S or ↑/↓ - Move paddle
+• SPACE - Start game/serve ball
+• ESC - Pause game
+• F - Toggle fullscreen
+• F1 - Show this help
+
+FEATURES:
+✨ Power-ups: Speed boost, bigger paddle, multiball, shield
+🎯 Achievements system with unlockable rewards
+📊 Statistics tracking and high scores
+🎵 Dynamic audio system with sound effects
+🎨 Particle effects and screen shake
+📱 Mobile touch controls
+⚙️ Customizable settings and difficulty levels
+🏆 Multiple game modes
+
+POWER-UPS:
+🔴 Speed - Increases ball speed temporarily
+🟢 Big Paddle - Makes your paddle larger
+🔵 Slow Motion - Slows down time (coming soon)
+🟡 Multiball - Adds extra balls to the game
+🟣 Shield - Temporary protection
+
+Good luck and have fun! 🚀
+                `);
+            }
+        });
+
+        // Add some easter eggs
+        let konamiCode = [];
+        const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+
+        document.addEventListener('keydown', (e) => {
+            konamiCode.push(e.code);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+
+            if (konamiCode.length === konamiSequence.length &&
+                konamiCode.every((key, index) => key === konamiSequence[index])) {
+                // Easter egg activated!
+                CONFIG.ball.speed *= 2;
+                CONFIG.paddle.speed *= 2;
+                alert('🎉 KONAMI CODE ACTIVATED! 🎉\nSuper speed mode enabled!');
+                konamiCode = [];
+            }
+        });
+
+        // Performance optimization for mobile
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            CONFIG.graphics.particles = false;
+            CONFIG.graphics.screenShake = false;
+            CONFIG.graphics.scanlines = false;
+        }
+
+        console.log(`
+🎮 CYBERNETIC PONG - ULTIMATE EDITION 🎮
+
+Welcome to the most advanced Pong game ever created!
+
+Features implemented:
+✅ Enhanced graphics with neon effects
+✅ Power-up system with 5 different types
+✅ Achievement system with notifications
+✅ Statistics tracking and high scores
+✅ Multiple difficulty levels
+✅ Audio system with sound effects
+✅ Particle effects and screen shake
+✅ Mobile touch controls
+✅ Fullscreen support
+✅ Pause functionality
+✅ Settings menu with customization
+✅ Performance monitoring
+✅ Background animations
+✅ Responsive design
+✅ Local storage for persistence
+✅ Easter eggs and keyboard shortcuts
+
+Press F1 for help and controls!
+        `);
+    </script>
+</body>
+</html>
