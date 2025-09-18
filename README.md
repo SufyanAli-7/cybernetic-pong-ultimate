@@ -177,7 +177,7 @@ cd cybernetic-pong
 ### Desktop Experience
 ```
 ┌─────────────────────────────────────────┐
-│  🎮 CYBERNETIC PONG - Ultimate Edition  │
+│  🎮 CYBERNETIC PONG - Ultimate Edition  │ 
 │                                         │
 │  ┌─────────────────────────────────────┐│
 │  │█    ●                            █  ││
@@ -341,9 +341,8 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 Need help or have questions?
 
-- 📧 **Email**: support@cybernetic-pong.com
-- 💬 **Issues**: [GitHub Issues](https://github.com/yourusername/cybernetic-pong/issues)
-- 📖 **Wiki**: [Documentation](https://github.com/yourusername/cybernetic-pong/wiki)
+- 📧 **Email**: msufyan.202105869@gcuf.edu.pk
+- 💬 **Issues**: [GitHub Issues](https://github.com/SufyanAli-7/cybernetic-pong-ultimate/issues)
 
 ---
 
@@ -360,8 +359,8 @@ Need help or have questions?
 
 **Made with ❤️ for the love of gaming**
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/cybernetic-pong?style=social)](https://github.com/yourusername/cybernetic-pong/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/cybernetic-pong?style=social)](https://github.com/yourusername/cybernetic-pong/network)
+[![GitHub stars](https://img.shields.io/github/stars/SufyanAli-7/cybernetic-pong-ultimate?style=social)](https://github.com/SufyanAli-7/cybernetic-pong-ultimate/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/SufyanAli-7/cybernetic-pong-ultimate?style=social)](https://github.com/SufyanAli-7/cybernetic-pong-ultimate/network)
 
 *🎮 Relive the classic. Experience the future. 🎮*
 
@@ -371,8 +370,7 @@ Need help or have questions?
 
 ## 🔗 Quick Links
 
-- [🚀 Play Game](./index.html)
-- [📖 Documentation](./docs/)
-- [🐛 Report Bug](https://github.com/yourusername/cybernetic-pong/issues)
-- [💡 Request Feature](https://github.com/yourusername/cybernetic-pong/issues)
-- [⭐ Star Project](https://github.com/yourusername/cybernetic-pong)
+- [🚀 Play Game](https://github.com/SufyanAli-7/cybernetic-pong-ultimate)
+- [🐛 Report Bug](https://github.com/SufyanAli-7/cybernetic-pong-ultimate/issues)
+- [💡 Request Feature](https://github.com/SufyanAli-7/cybernetic-pong-ultimate/issues)
+- [⭐ Star Project](https://github.com/SufyanAli-7/cybernetic-pong-ultimate)
