@@ -11,7 +11,7 @@
 
 *Experience the classic game with cybernetic enhancements, stunning visual effects, and modern features.*
 
-[🚀 Play Now](#getting-started) | [📖 Features](#features) | [🎯 Controls](#controls) | [📱 Mobile](#mobile-support)
+[🚀 Play Now](https://sufyanali-7.github.io/cybernetic-pong-ultimate/) | [📖 Features](#features) | [🎯 Controls](#controls) | [📱 Mobile](#mobile-support)
 
 </div>
 
