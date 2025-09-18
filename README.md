@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🎮 Cybernetic Pong - Ultimate Edition
 
 <div align="center">
@@ -377,7 +376,3 @@ Need help or have questions?
 - [🐛 Report Bug](https://github.com/yourusername/cybernetic-pong/issues)
 - [💡 Request Feature](https://github.com/yourusername/cybernetic-pong/issues)
 - [⭐ Star Project](https://github.com/yourusername/cybernetic-pong)
-=======
-# cybernetic-pong-ultimate
-🎮 Cybernetic Pong - Ultimate Edition: The most advanced Pong game ever created with neon effects, power-ups, achievements, and mobile support!
->>>>>>> faadbc4534baf1ea0665d8e9993ce7b4867f3b46
